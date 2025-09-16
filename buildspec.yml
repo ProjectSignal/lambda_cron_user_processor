@@ -1,0 +1,46 @@
+version: 0.2
+
+env:
+  variables:
+    LAMBDA_FUNCTION_NAME: "lambda-cron-user-processor"
+    PYTHON_VERSION: "3.11"
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo "Installing AWS CLI and dependencies..."
+      - pip install --upgrade pip
+      - pip install awscli
+  pre_build:
+    commands:
+      - echo "Pre-build phase started on `date`"
+      - pip install -r requirements.txt -t ./
+  build:
+    commands:
+      - echo "Build phase started on `date`"
+      - find . -name "*.pyc" -delete
+      - find . -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+      - find . -name "*.dist-info" -exec rm -rf {} + 2>/dev/null || true
+      - rm -rf .git .gitignore README.md VALIDATION_SUMMARY.md test_local.py validate_structure.py .env
+      - zip -r lambda-deployment-package.zip . -x "buildspec.yml" "README.md" "VALIDATION_SUMMARY.md" "test_local.py" "validate_structure.py" ".env"
+  post_build:
+    commands:
+      - echo "Post-build phase started on `date`"
+      - |
+        if aws lambda get-function --function-name $LAMBDA_FUNCTION_NAME 2>/dev/null; then
+          aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://lambda-deployment-package.zip
+          aws lambda wait function-updated --function-name $LAMBDA_FUNCTION_NAME
+        else
+          echo "Lambda function $LAMBDA_FUNCTION_NAME not found. Please create it before running the pipeline."
+          exit 1
+        fi
+artifacts:
+  files:
+    - lambda-deployment-package.zip
+  name: lambda-cron-user-processor-$(date +%Y-%m-%d-%H-%M-%S)
+
+cache:
+  paths:
+    - '/root/.cache/pip/**/*'

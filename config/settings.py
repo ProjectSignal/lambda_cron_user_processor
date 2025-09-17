@@ -10,7 +10,7 @@ class Config:
     """Unified configuration surface for the user processor Lambda."""
 
     def __init__(self) -> None:
-        # API configuration (replaces direct Mongo access)
+        # API configuration
         self.BASE_API_URL = self._get_env("BASE_API_URL", required=True).rstrip("/")
         self.API_KEY = self._get_env("INSIGHTS_API_KEY", required=True)
         self.API_TIMEOUT_SECONDS = int(self._get_env("API_TIMEOUT_SECONDS", default="30"))

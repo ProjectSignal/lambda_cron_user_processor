@@ -92,7 +92,11 @@ class UserProcessor:
         """Retrieve the user payload from the REST API."""
         # API Route: users.getById, Input: {"userId": user_id}, Output: {"data": {...}}
         response = self.api.get(f"users/{user_id}")
-        return response.get("data", response)
+        if isinstance(response, dict) and response.get("success") is False:
+            raise RuntimeError(response.get("message") or "User lookup failed")
+        if isinstance(response, dict) and "data" in response:
+            return response["data"]
+        return response
 
     def _persist_profile(self, user_id: str, profile_data: Dict[str, Any], avatar_url: Optional[str]) -> None:
         """Persist scraped profile data back through the REST API."""
@@ -107,7 +111,7 @@ class UserProcessor:
 
         # API Route: users.updateProfile, Input: payload, Output: {"success": bool}
         result = self.api.request("PATCH", f"users/{user_id}", payload)
-        if not result.get("success", True):
+        if isinstance(result, dict) and result.get("success") is False:
             raise RuntimeError(f"Profile update failed for user {user_id}: {result}")
 
     def _sync_avatar(
@@ -147,7 +151,9 @@ class UserProcessor:
                 "errorMessage": error_message,
             }
             # API Route: users.markError, Input: payload, Output: {"success": bool}
-            self.api.request("POST", "users/mark-error", payload)
+            response = self.api.request("POST", "users/mark-error", payload)
+            if isinstance(response, dict) and response.get("success") is False:
+                self.logger.error("Failed to mark user %s as error via API: %s", user_id, response.get("message"))
         except Exception as exc:  # pragma: no cover - secondary failure logging
             self.logger.error("Failed to mark user %s as error: %s", user_id, exc)
 

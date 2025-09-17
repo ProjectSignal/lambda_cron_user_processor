@@ -19,10 +19,6 @@ class Config:
         # Lambda runtime settings
         self.PROCESSING_TIMEOUT = int(self._get_env("PROCESSING_TIMEOUT", default="30"))
         self.DELETE_AVATARS = self._get_env("DELETE_AVATARS", default="true").lower() == "true"
-        self.WORKER_ID = self._get_env(
-            "WORKER_ID",
-            default=self._get_env("AWS_LAMBDA_FUNCTION_NAME", default="local-worker"),
-        )
 
         # R2 storage configuration
         self.R2_ACCESS_KEY_ID = self._get_env("R2_ACCESS_KEY_ID", required=True)

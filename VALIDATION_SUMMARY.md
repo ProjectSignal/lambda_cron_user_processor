@@ -44,7 +44,6 @@ CLOUDFLARE_ACCOUNT_ID=***
 CLOUDFLARE_API_TOKEN=***
 DELETE_AVATARS=true
 PROCESSING_TIMEOUT=30
-WORKER_ID=lambda-cron-user-processor
 ```
 
 ## Testing Aids

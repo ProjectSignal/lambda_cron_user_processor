@@ -47,10 +47,10 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     if not user_id:
         return {
             "statusCode": 400,
-            "body": json.dumps({
+            "body": {
                 "success": False,
                 "error": "userId required",
-            }),
+            },
         }
 
     processor = _get_processor()
@@ -61,11 +61,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         logger.exception("Unhandled error while processing user %s", user_id)
         return {
             "statusCode": 500,
-            "body": json.dumps({
+            "body": {
                 "success": False,
                 "userId": user_id,
                 "error": str(exc),
-            }),
+            },
         }
 
     success = bool(result.get("success"))
@@ -79,12 +79,23 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             "User processed successfully" if success else "User processing failed",
         ),
     }
+
+    passthrough_fields = (
+        "profileFieldsUpdated",
+        "avatarChanged",
+        "skipped",
+        "details",
+    )
+    for field in passthrough_fields:
+        if field in result and result[field] is not None:
+            response_body[field] = result[field]
+
     if request_body:
         response_body["requestBody"] = request_body
 
     return {
         "statusCode": status_code,
-        "body": json.dumps(response_body),
+        "body": response_body,
     }
 
 

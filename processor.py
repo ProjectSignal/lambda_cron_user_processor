@@ -52,6 +52,10 @@ class UserProcessor:
                 "success": True,
                 "statusCode": 200,
                 "message": "User already processed",
+                "userId": user_id,
+                "profileFieldsUpdated": [],
+                "avatarChanged": False,
+                "skipped": True,
             }
 
         html_path = user.get("htmlPath")
@@ -75,6 +79,7 @@ class UserProcessor:
 
         existing_avatar = user.get("avatarURL")
         new_avatar_url = self._sync_avatar(user_id, profile_data, existing_avatar)
+        avatar_changed = bool(new_avatar_url and new_avatar_url != existing_avatar)
 
         try:
             self._persist_profile(user_id, profile_data, new_avatar_url)
@@ -82,10 +87,15 @@ class UserProcessor:
             return self._handle_error(user_id, f"Failed to update user via API: {exc}")
 
         self.logger.info("Successfully processed user %s", user_id)
+        profile_keys = sorted(profile_data.keys()) if isinstance(profile_data, dict) else []
         return {
             "success": True,
             "statusCode": 200,
             "message": "User processed successfully",
+            "userId": user_id,
+            "profileFieldsUpdated": profile_keys,
+            "avatarChanged": avatar_changed,
+            "skipped": False,
         }
 
     def _fetch_user(self, user_id: str) -> Dict[str, Any]:
@@ -161,6 +171,7 @@ class UserProcessor:
             "success": False,
             "statusCode": 500,
             "message": error_message,
+            "userId": user_id,
         }
 
 

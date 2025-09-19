@@ -63,13 +63,17 @@ def test_lambda():
         print(f"Status Code: {result['statusCode']}")
 
         # Parse and display the response
-        response_body = json.loads(result['body'])
+        response_body = result.get('body', {})
+        if isinstance(response_body, str):
+            response_body = json.loads(response_body)
 
         if result['statusCode'] == 200 and response_body.get('success'):
             print(f"🎉 SUCCESS!")
             print(f"📊 User Processing Complete:")
             print(f"   - User ID: {response_body.get('userId')}")
             print(f"   - Status: {response_body.get('message')}")
+            print(f"   - Profile fields updated: {response_body.get('profileFieldsUpdated', [])}")
+            print(f"   - Avatar changed: {response_body.get('avatarChanged')}")
             print(f"   - ✅ User profile has been processed and updated via API")
             print()
             print("📝 Note: User profile data is now stored via API call")

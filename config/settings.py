@@ -16,9 +16,8 @@ class Config:
         self.API_TIMEOUT_SECONDS = int(self._get_env("API_TIMEOUT_SECONDS", default="30"))
         self.API_MAX_RETRIES = int(self._get_env("API_MAX_RETRIES", default="3"))
 
-        # Lambda runtime settings
-        self.PROCESSING_TIMEOUT = int(self._get_env("PROCESSING_TIMEOUT", default="30"))
-        self.DELETE_AVATARS = self._get_env("DELETE_AVATARS", default="true").lower() == "true"
+        # Lambda runtime settings - hardcoded since these shouldn't be environment variables
+        self.DELETE_AVATARS = False  # Hardcoded to false to match .env default
 
         # R2 storage configuration
         self.R2_ACCESS_KEY_ID = self._get_env("R2_ACCESS_KEY_ID", required=True)
